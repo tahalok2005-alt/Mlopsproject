@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wine-api
+  labels:
+    app: wine-api
+spec:
+  # No `replicas` here: the HPA owns the count, and each deploy re-applies this file.
+  selector:
+    matchLabels:
+      app: wine-api
+  template:
+    metadata:
+      labels:
+        app: wine-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8000"
+    spec:
+      containers:
+        - name: wine-api
+          # Replaced with the ACR image and commit SHA by `kustomize edit set image` at deploy time.
+          image: wine-api
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
