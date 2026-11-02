@@ -59,7 +59,7 @@ docker compose up --build
 1. Sign in at https://share.streamlit.io with GitHub and choose **Create app**.
 2. Pick this repo, branch `main`, and main file `app.py`.
 
-It installs `requirements.txt`, and `app.py` trains the model itself on first boot if
+It installs the Streamlit-only `requirements.txt`, and `app.py` trains the model itself on first boot if
 `model/model.pkl` isn't present (it's gitignored, since it's a build artifact). Every push to
 `main` redeploys the app.
 

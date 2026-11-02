@@ -1,9 +1,5 @@
-scikit-learn==1.5.2
-pandas==2.2.3
-joblib==1.4.2
-fastapi==0.115.4
-uvicorn[standard]==0.32.0
-prometheus-fastapi-instrumentator==7.0.0
-streamlit==1.39.0
-requests==2.32.3
-pydantic==2.9.2
+# Streamlit Community Cloud installs this file. API dependencies are in requirements-api.txt.
+streamlit>=1.39
+scikit-learn>=1.5.2
+pandas>=2.2.3
+joblib>=1.4.2
