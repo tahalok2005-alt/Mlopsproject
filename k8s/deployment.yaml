@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: wine-api
-          # Replaced with the ACR image and commit SHA by `kustomize edit set image` at deploy time.
+          # Replaced with the GHCR image by `kustomize edit set image` at deploy time.
           image: wine-api
           ports:
             - containerPort: 8000
