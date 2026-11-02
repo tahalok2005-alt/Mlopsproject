@@ -1,16 +1,59 @@
 {
+  "uid": "wine-api",
   "title": "Wine API",
   "timezone": "browser",
   "schemaVersion": 39,
+  "time": { "from": "now-15m", "to": "now" },
+  "refresh": "5s",
   "panels": [
+    {
+      "id": 4,
+      "title": "API instances up",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "decimals": 0, "color": { "mode": "fixed", "fixedColor": "green" } } },
+      "targets": [{ "expr": "sum(up{job=\"wine-api\"})", "instant": true }]
+    },
+    {
+      "id": 5,
+      "title": "Predictions served",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 0 },
+      "fieldConfig": { "defaults": { "decimals": 0, "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "targets": [{ "expr": "sum(http_requests_total{handler=\"/predict\",status=\"2xx\"}) or vector(0)", "instant": true }]
+    },
+    {
+      "id": 6,
+      "title": "p95 latency (5m)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "s", "color": { "mode": "fixed", "fixedColor": "purple" } } },
+      "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler=\"/predict\"}[5m])) by (le))", "instant": true }]
+    },
+    {
+      "id": 7,
+      "title": "Error rate (5m)",
+      "type": "stat",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 0 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "targets": [{ "expr": "100 * (sum(rate(http_requests_total{handler=\"/predict\",status=\"5xx\"}[5m])) or vector(0)) / sum(rate(http_requests_total{handler=\"/predict\"}[5m])) or vector(0)", "instant": true }]
+    },
     {
       "id": 1,
       "title": "Request rate (req/s)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0, "custom": { "fillOpacity": 15 } } },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{handler=\"/predict\"}[1m]))",
+          "expr": "sum(rate(http_requests_total{handler=\"/predict\"}[1m])) or vector(0)",
           "legendFormat": "predict req/s"
         }
       ]
@@ -19,10 +62,11 @@
       "id": 2,
       "title": "p95 latency (s)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0, "custom": { "fillOpacity": 15 } } },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{handler=\"/predict\"}[1m])) by (le))",
           "legendFormat": "p95"
         }
       ]
@@ -31,11 +75,25 @@
       "id": 3,
       "title": "Error rate (5xx)",
       "type": "timeseries",
-      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 } },
       "targets": [
         {
-          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m]))",
+          "expr": "sum(rate(http_requests_total{status=\"5xx\"}[1m])) or vector(0)",
           "legendFormat": "5xx/s"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Requests by endpoint (req/s)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 } },
+      "targets": [
+        {
+          "expr": "sum by (handler) (rate(http_requests_total[1m]))",
+          "legendFormat": "{{handler}}"
         }
       ]
     }

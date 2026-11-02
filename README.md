@@ -56,6 +56,12 @@ docker compose up --build
 - Grafana: http://localhost:3000 (anonymous viewer access enabled; admin/admin to edit).
   The "Wine API" dashboard is auto-provisioned.
 
+The dashboard needs traffic to show anything live, so run the generator while you watch it. It
+takes the API URL and defaults to `http://localhost:8001`:
+```bash
+python scripts/generate_traffic.py http://localhost:8000
+```
+
 If port 8000 is busy, set `API_PORT`, for example `API_PORT=8001 docker compose up`.
 
 If the build fails with `invalid file request Dockerfile`, the project is in a OneDrive folder.
