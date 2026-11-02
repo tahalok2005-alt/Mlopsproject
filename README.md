@@ -2,7 +2,7 @@
 
 A deliberately simple ML project (RandomForest on the UCI Wine dataset, which classifies wines
 into three cultivars from 13 chemical measurements) wrapped in an MLOps scaffold: CI/CD, Docker,
-Kubernetes manifests, and Prometheus/Grafana monitoring, with the UI deployed on Streamlit
+Kubernetes, Terraform, and Prometheus/Grafana monitoring, with the UI deployed on Streamlit
 Community Cloud. The model is a toy; the plumbing around it is the point.
 
 ## Architecture
@@ -19,6 +19,9 @@ Community Cloud. The model is a toy; the plumbing around it is the point.
 - **`k8s/`** — Deployment, Service (LoadBalancer), and HorizontalPodAutoscaler manifests for any
   cluster. Its kustomization also pulls in `monitoring/`, so one `kubectl apply -k k8s/` deploys
   everything.
+- **`k8s-local/`** — overlay for a local kind cluster: uses the local image and adds metrics-server
+  so the HPA works.
+- **`terraform/`** — creates the kind cluster, loads the image, and deploys `k8s-local/`.
 - **`monitoring/`** — Prometheus configs (static for compose, pod discovery for Kubernetes), a
   provisioned Grafana dashboard, and the Kubernetes manifests for both.
 
@@ -52,6 +55,38 @@ docker compose up --build
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (anonymous viewer access enabled; admin/admin to edit).
   The "Wine API" dashboard is auto-provisioned.
+
+If port 8000 is busy, set `API_PORT`, for example `API_PORT=8001 docker compose up`.
+
+If the build fails with `invalid file request Dockerfile`, the project is in a OneDrive folder.
+Build the image from git instead, then start the stack without building:
+```bash
+git archive HEAD | docker build -t wine-api:local -
+```
+```bash
+docker compose up --no-build
+```
+
+## Run the full stack on local Kubernetes (Terraform + kind)
+
+Needs Docker, `terraform`, `kind`, `kubectl`, and the `wine-api:local` image built above.
+```bash
+cd terraform && terraform init && terraform apply
+```
+This creates a kind cluster, loads the image, and deploys the API, HPA, Prometheus and Grafana.
+Reach them with port-forwarding, one command per terminal:
+```bash
+kubectl --context kind-wine-mlops port-forward service/wine-api 8002:80
+```
+```bash
+kubectl --context kind-wine-mlops port-forward service/prometheus 19090:9090
+```
+```bash
+kubectl --context kind-wine-mlops port-forward service/grafana 13000:3000
+```
+Then open http://localhost:8002/docs, http://localhost:19090 and http://localhost:13000.
+
+Remove the cluster with `terraform destroy`.
 
 ## Deploy
 

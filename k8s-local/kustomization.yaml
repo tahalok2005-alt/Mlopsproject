@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+# Local kind cluster: uses the loaded image, adds metrics-server for the HPA, and has no cloud
+# load balancer, so the API is reached with port-forwarding.
+resources:
+  - ../k8s
+  - https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.7.2/components.yaml
+images:
+  - name: wine-api
+    newName: wine-api
+    newTag: local
+patches:
+  - target:
+      kind: Service
+      name: wine-api
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: ClusterIP
+  - target:
+      kind: Deployment
+      name: metrics-server
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/args/-
+        value: --kubelet-insecure-tls
